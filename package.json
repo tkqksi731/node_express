@@ -21,5 +21,7 @@
   "homepage": "https://github.com/tkqksi731/node.js_Study_1#readme",
   "dependencies": {
     "sanitize-html": "^2.3.0"
-  }
+  },
+  "devDependencies": {},
+  "keywords": []
 }
