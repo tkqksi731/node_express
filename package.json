@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/tkqksi731/node.js_Study_1#readme",
   "dependencies": {
+    "express": "^4.17.1",
     "sanitize-html": "^2.3.0"
   },
   "devDependencies": {},
