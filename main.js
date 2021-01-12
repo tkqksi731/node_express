@@ -1,3 +1,7 @@
+const path = require('path');
+const fs = require('fs');
+const template = require('./lib/template.js');
+const sanitizeHtml = require('sanitize-html');
 const express = require('express')
 const app = express()
 const port = 3000
@@ -9,12 +13,42 @@ const port = 3000
 // })
 
 // 예전 문법
-app.get('/', function(req, res) {
-  return res.send('/')
+app.get('/', function(request, response) {
+  fs.readdir('./data', function(error, filelist){
+    // 화면의 홈 부분
+    let title = 'Welcome';
+    let description = 'Hello, Node.js';
+    let list = template.list(filelist);
+    let html = template.HTML(title, list,
+      `<h2>${title}</h2>${description}`,
+      `<a href="/create">create</a>`
+      );
+      response.send(html);
+    });
 });
 
-app.get('/page', function(req, res) {
-  return res.send('/page')
+// Route parameters - express
+app.get('/page/:pageId', function(request, response) {
+  // key : value 방식
+  fs.readdir('./data', function(error, filelist){
+    const filteredId = path.parse(request.params.pageId).base; // security
+    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+      let title = request.params.pageId;
+      let sanitizedTitle = sanitizeHtml(title);
+      let sanitizedDescroption = sanitizeHtml(description);
+      let list = template.list(filelist);
+      let html = template.HTML(sanitizedTitle, list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
+        `<a href="/create">create</a>
+        <a href="/update?id=${sanitizedTitle}">update</a>
+        <form action="delete_process" method="post">
+          <input type="hidden" name="id" value="${sanitizedTitle}">
+          <input type="submit" value="delete">
+        </form>`
+        );
+        response.send(html);
+    });
+  });
 });
 
 app.listen(port, () => {
@@ -40,30 +74,6 @@ app.listen(port, () => {
 //     // console.log(pathname);
 //     if(pathname === '/'){
 //       if(queryData.id === undefined){
-//         fs.readdir('./data', function(error, filelist){
-//           // 화면의 홈 부분
-//           let title = 'Welcome';
-//           let description = 'Hello, Node.js';
-          
-//           /*
-//           기존
-//           let list = templateList(filelist);
-//           let template = templateHTML(title, list,
-//             `<h2>${title}</h2>${description}`,
-//             `<a href="/create">create</a>`
-//             );
-//           */
-
-//           // 변경
-//           let list = template.list(filelist);
-//           let html = template.HTML(title, list,
-//             `<h2>${title}</h2>${description}`,
-//             `<a href="/create">create</a>`
-//             );
-
-//           response.writeHead(200);
-//           response.end(html);
-//         });
 //       } else {
 //         fs.readdir('./data', function(error, filelist){
 //           const filteredId = path.parse(queryData.id).base; // security
