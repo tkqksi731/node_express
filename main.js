@@ -43,11 +43,13 @@ app.get('/page/:pageId', function(request, response) {
         `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
         `<a href="/create">create</a>
         <a href="/update/${sanitizedTitle}">update</a>
-        <form action="delete_process" method="post">
+        <form action="/delete_process" method="post">
           <input type="hidden" name="id" value="${sanitizedTitle}">
           <input type="submit" value="delete">
         </form>`
         );
+        // /update?id= -> /update/ 변경
+        // delete_process 부분에 /delete_process 로 변경
         response.send(html);
     });
   });
@@ -90,8 +92,7 @@ app.post('/create_process', function(request, response){
       let description = post.description;
       // 제목과 내용 업로드
       fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-        response.writeHead(302, {Location: `/page/${title}`}); // 보내고 싶은 위치의 주소
-        response.end('success');
+        response.redirect(`/page/${title}`);
       });
     });
 });
@@ -142,13 +143,31 @@ app.post('/update_process', function(request, response){
         fs.rename(`data/${id}`, `data/${title}`, function(error){
           // 제목과 내용 수정 업로드
           fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-            response.writeHead(302, {Location: `/page/${title}`}); // 보내고 싶은 위치의 주소
-            response.end();
+            response.redirect(`/page/${title}`);
           })
         })
         // console.log(post);
       
       });
+});
+
+app.post('/delete_process', function(request,response){
+  // nodejs express redirect search
+  let body = '';
+    request.on('data', function(data){
+        // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
+      body = body + data;
+    });
+    request.on('end', function(){
+      // 들어올 정보가 더 이상 없으면 정보 수신 끝
+      let post = qs.parse(body);
+      let id = post.id;
+      const filteredId = path.parse(id).base; // security
+      // unlink로 삭제
+      fs.unlink(`data/${filteredId}`, function(error){
+        response.redirect(`/`);
+      })
+    });
 });
 
 app.listen(port, () => {
@@ -179,77 +198,11 @@ app.listen(port, () => {
 //     } else if(pathname === '/create'){
 //     } else if(pathname === '/create_process') {
 //     } else if(pathname === '/update'){
-//       fs.readdir('./data', function(error, filelist){
-//         const filteredId = path.parse(queryData.id).base; // security
-//         fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-//           let title = queryData.id;
-//           let list = template.list(filelist);
-//           let html = template.HTML(title, list,
-//             //hidden으로 하여 id 값을 받고 변경된 title을 삽입
-//             `
-//             <form action="/update_process" method="post">
-//               <input type="hidden" name="id" value="${title}">
-//               <p>
-//                 <input type="text" name="title" placeholder="title" value="${title}">
-//               </p>
-//               <p>
-//                 <textarea name="description" placeholder="description">${description}</textarea>
-//               </p>
-//               <p>
-//                 <input type="submit">
-//               </p>
-//             </form>
-//             `,
-//             `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-//             );
-//             // 업데이트 시 선택한 제목과 내용에 대하여 불러와 title, description text 박스에 보이기
-//           response.writeHead(200);
-//           response.end(html);
-//         });
-
-//       });
 //       // nodejs file write search
 //     } else if(pathname === '/update_process') {
-//       let body = '';
-//       request.on('data', function(data){
-//           // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
-//         body = body + data;
-//       });
-//       request.on('end', function(){
-//         // 들어올 정보가 더 이상 없으면 정보 수신 끝
-//         let post = qs.parse(body);
-//         let id = post.id;
-//         let title = post.title;
-//         let description = post.description;
-//         fs.rename(`data/${id}`, `data/${title}`, function(error){
-//           // 제목과 내용 수정 업로드
-//           fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-//             response.writeHead(302, {Location: `/?id=${title}`}); // 보내고 싶은 위치의 주소
-//             response.end();
-//           })
-//         })
-//         console.log(post);
-      
 //       });
 //       // Nodejs delete file search
 //     } else if(pathname === '/delete_process') {
-//       let body = '';
-//       request.on('data', function(data){
-//           // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
-//         body = body + data;
-//       });
-//       request.on('end', function(){
-//         // 들어올 정보가 더 이상 없으면 정보 수신 끝
-//         let post = qs.parse(body);
-//         let id = post.id;
-//         const filteredId = path.parse(id).base; // security
-//         // unlink로 삭제
-//         fs.unlink(`data/${filteredId}`, function(error){
-//           response.writeHead(302, {Location: `/`});
-//           response.end();
-//         })
-      
-//       });
 //     } else {
 //       response.writeHead(404);
 //       response.end('Not found');
