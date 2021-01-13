@@ -3,6 +3,7 @@ const fs = require('fs');
 const template = require('./lib/template.js');
 const sanitizeHtml = require('sanitize-html');
 const qs = require('querystring');
+const bodyParser = require('body-parser')
 const express = require('express')
 const app = express()
 const port = 3000
@@ -12,6 +13,9 @@ const port = 3000
 // app.get('/', (req, res) => {
 //   res.send('Hello World!')
 // })
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
 
 // 예전 문법
 app.get('/', function(request, response) {
@@ -80,6 +84,8 @@ app.get('/create', function(request, response){
 
 // 페이지 생성 POST 방식
 app.post('/create_process', function(request, response){
+  
+  /*
   let body = '';
     request.on('data', function(data){
         // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
@@ -95,6 +101,16 @@ app.post('/create_process', function(request, response){
         response.writeHead(302, {Location: `/?id=${title}`});
         response.end();
       });
+    });
+  */
+ 
+ let post = request.body;
+    let title = post.title;
+    let description = post.description;
+    // 제목과 내용 업로드
+    fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
+      response.writeHead(302, {Location: `/?id=${title}`});
+      response.end();
     });
 });
 
@@ -130,45 +146,26 @@ app.get('/update/:pageId', function(request, response){
 });
 
 app.post('/update_process', function(request, response){
-        let body = '';
-      request.on('data', function(data){
-          // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
-        body = body + data;
-      });
-      request.on('end', function(){
-        // 들어올 정보가 더 이상 없으면 정보 수신 끝
-        let post = qs.parse(body);
-        let id = post.id;
-        let title = post.title;
-        let description = post.description;
-        fs.rename(`data/${id}`, `data/${title}`, function(error){
-          // 제목과 내용 수정 업로드
-          fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-            response.redirect(`/page/${title}`);
-          })
-        })
-        // console.log(post);
-      
-      });
+    let post = request.body;
+    let id = post.id;
+    let title = post.title;
+    let description = post.description;
+    fs.rename(`data/${id}`, `data/${title}`, function(error){
+      // 제목과 내용 수정 업로드
+      fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
+        response.redirect(`/page/${title}`);
+    })
+  });
 });
 
 app.post('/delete_process', function(request,response){
-  // nodejs express redirect search
-  let body = '';
-    request.on('data', function(data){
-        // 웹 브라우저가 POST방식으로 전송할 떄 data의 양이 많으면 함수 호출하도록 약속
-      body = body + data;
-    });
-    request.on('end', function(){
-      // 들어올 정보가 더 이상 없으면 정보 수신 끝
-      let post = qs.parse(body);
-      let id = post.id;
-      const filteredId = path.parse(id).base; // security
-      // unlink로 삭제
-      fs.unlink(`data/${filteredId}`, function(error){
-        response.redirect(`/`);
-      })
-    });
+    let post = request.body;
+    let id = post.id;
+    const filteredId = path.parse(id).base; // security
+    // unlink로 삭제
+    fs.unlink(`data/${filteredId}`, function(error){
+      response.redirect(`/`);
+  });
 });
 
 app.listen(port, () => {
