@@ -92,7 +92,8 @@ app.post('/create_process', function(request, response){
       let description = post.description;
       // 제목과 내용 업로드
       fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-        response.redirect(`/page/${title}`);
+        response.writeHead(302, {Location: `/?id=${title}`});
+        response.end();
       });
     });
 });
