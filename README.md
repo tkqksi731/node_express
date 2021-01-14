@@ -46,3 +46,6 @@ pm2를 실행하면서 로그가 출력되도록 합니다. (--no-daemon) 또 �
    - npm install body-parser - 패키지 설치
    - const bodyParser = require('body-parser') - 패키지 호출
    - request.body
+8. 미들웨어의 사용 compression
+   - npm install compression
+   - app.use(compression())

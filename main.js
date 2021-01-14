@@ -4,6 +4,7 @@ const template = require('./lib/template.js');
 const sanitizeHtml = require('sanitize-html');
 const qs = require('querystring');
 const bodyParser = require('body-parser')
+const compression = require('compression')
 const express = require('express')
 const app = express()
 const port = 3000
@@ -15,7 +16,8 @@ const port = 3000
 // })
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 // 예전 문법
 app.get('/', function(request, response) {
@@ -104,14 +106,14 @@ app.post('/create_process', function(request, response){
     });
   */
  
- let post = request.body;
-    let title = post.title;
-    let description = post.description;
-    // 제목과 내용 업로드
-    fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-      response.writeHead(302, {Location: `/?id=${title}`});
-      response.end();
-    });
+  let post = request.body;
+  let title = post.title;
+  let description = post.description;
+  // 제목과 내용 업로드
+  fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
+    response.writeHead(302, {Location: `/?id=${title}`});
+    response.end();
+  });
 });
 
 // 페이지 업데이트
