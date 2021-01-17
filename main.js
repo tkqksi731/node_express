@@ -16,72 +16,77 @@ const port = 3000
 // })
 
 // parse application/x-www-form-urlencoded
+app.use(express.static('public'));
+// 이미지 파일 가져오기 디렉토리 위치 설정
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
+app.get('*', function(request, response, next){
+  fs.readdir('./data', function(error, filelist){
+    request.list = filelist;
+    next();
+  });
+});
 
 // 예전 문법
-app.get('/', function(request, response) {
-  fs.readdir('./data', function(error, filelist){
-    // 화면의 홈 부분
-    let title = 'Welcome';
-    let description = 'Hello, Node.js';
-    let list = template.list(filelist);
-    let html = template.HTML(title, list,
-      `<h2>${title}</h2>${description}`,
-      `<a href="/create">create</a>`
-      );
-      response.send(html);
-    });
+app.get('/', function(request, response) {  
+  // 화면의 홈 부분
+  let title = 'Welcome';
+  let description = 'Hello, Node.js';
+  let list = template.list(request.list);
+  let html = template.HTML(title, list,
+    `<h2>${title}</h2>${description}
+    <img src="/images/hello.jpg" style="width:300px; height:300px; display:block; margin-top:10px;"> `,
+    // 메인 페이지에 hello 이미지 넣기
+    `<a href="/create">create</a>`
+    );
+    response.send(html);
 });
 
 // 상세 페이지 구현
 // Route parameters - express
 app.get('/page/:pageId', function(request, response) {
+  // console.log(request.list)
   // key : value 방식
-  fs.readdir('./data', function(error, filelist){
-    const filteredId = path.parse(request.params.pageId).base; // security
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-      let title = request.params.pageId;
-      let sanitizedTitle = sanitizeHtml(title);
-      let sanitizedDescroption = sanitizeHtml(description);
-      let list = template.list(filelist);
-      let html = template.HTML(sanitizedTitle, list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
-        `<a href="/create">create</a>
-        <a href="/update/${sanitizedTitle}">update</a>
-        <form action="/delete_process" method="post">
-          <input type="hidden" name="id" value="${sanitizedTitle}">
-          <input type="submit" value="delete">
-        </form>`
-        );
-        // /update?id= -> /update/ 변경
-        // delete_process 부분에 /delete_process 로 변경
-        response.send(html);
+  const filteredId = path.parse(request.params.pageId).base; // security
+  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    let title = request.params.pageId;
+    let sanitizedTitle = sanitizeHtml(title);
+    let sanitizedDescroption = sanitizeHtml(description);
+    let list = template.list(request.list);
+    let html = template.HTML(sanitizedTitle, list,
+      `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
+      `<a href="/create">create</a>
+      <a href="/update/${sanitizedTitle}">update</a>
+      <form action="/delete_process" method="post">
+        <input type="hidden" name="id" value="${sanitizedTitle}">
+        <input type="submit" value="delete">
+      </form>`
+      );
+      // /update?id= -> /update/ 변경
+      // delete_process 부분에 /delete_process 로 변경
+      response.send(html);
     });
-  });
 });
 
 // 페이지 생성
 app.get('/create', function(request, response){
-  fs.readdir('./data', function(error, filelist){
-      let title = 'WEB - create';
-      let list = template.list(filelist);
-      let html = template.HTML(title, list, `
-      <form action="/create_process" method="post">
-      <p>
-        <input type="text" name="title" placeholder="title">
-      </p>
-      <p>
-        <textarea name="description" placeholder="description"></textarea>
-      </p>
-      <p>
-        <input type="submit">
-      </p>
-    </form>
-  `, '');
-    // create 부분 만들기(url, 요청)
-      response.send(html);
-    });
+    let title = 'WEB - create';
+    let list = template.list(request.list);
+    let html = template.HTML(title, list, `
+    <form action="/create_process" method="post">
+    <p>
+      <input type="text" name="title" placeholder="title">
+    </p>
+    <p>
+      <textarea name="description" placeholder="description"></textarea>
+    </p>
+    <p>
+      <input type="submit">
+    </p>
+  </form>
+`, '');
+  // create 부분 만들기(url, 요청)
+    response.send(html);
 });
 
 // 페이지 생성 POST 방식
@@ -109,6 +114,7 @@ app.post('/create_process', function(request, response){
   let post = request.body;
   let title = post.title;
   let description = post.description;
+  console.log(request.list)
   // 제목과 내용 업로드
   fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
     response.writeHead(302, {Location: `/?id=${title}`});
@@ -118,33 +124,31 @@ app.post('/create_process', function(request, response){
 
 // 페이지 업데이트
 app.get('/update/:pageId', function(request, response){
-  fs.readdir('./data', function(error, filelist){
-      const filteredId = path.parse(request.params.pageId).base; // security
-      fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-        let title = request.params.pageId;
-        let list = template.list(filelist);
-        let html = template.HTML(title, list,
-          //hidden으로 하여 id 값을 받고 변경된 title을 삽입
-          `
-          <form action="/update_process" method="post">
-            <input type="hidden" name="id" value="${title}">
-            <p>
-              <input type="text" name="title" placeholder="title" value="${title}">
-            </p>
-            <p>
-              <textarea name="description" placeholder="description">${description}</textarea>
-            </p>
-            <p>
-              <input type="submit">
-            </p>
-          </form>
-          `,
-          `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-          );
-          // 업데이트 시 선택한 제목과 내용에 대하여 불러와 title, description text 박스에 보이기
-          response.send(html);
-      });
-    });
+  const filteredId = path.parse(request.params.pageId).base; // security
+  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    let title = request.params.pageId;
+    let list = template.list(request.list);
+    let html = template.HTML(title, list,
+      //hidden으로 하여 id 값을 받고 변경된 title을 삽입
+      `
+      <form action="/update_process" method="post">
+        <input type="hidden" name="id" value="${title}">
+        <p>
+          <input type="text" name="title" placeholder="title" value="${title}">
+        </p>
+        <p>
+          <textarea name="description" placeholder="description">${description}</textarea>
+        </p>
+        <p>
+          <input type="submit">
+        </p>
+      </form>
+      `,
+      `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+      );
+      // 업데이트 시 선택한 제목과 내용에 대하여 불러와 title, description text 박스에 보이기
+      response.send(html);
+  });
 });
 
 app.post('/update_process', function(request, response){
