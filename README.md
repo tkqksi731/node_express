@@ -49,3 +49,5 @@ pm2를 실행하면서 로그가 출력되도록 합니다. (--no-daemon) 또 �
 8. 미들웨어의 사용 compression
    - npm install compression
    - app.use(compression())
+9. 정적인 파일의 서비스
+   - app.use(express.static('public'));
