@@ -44,28 +44,32 @@ app.get('/', function(request, response) {
 
 // 상세 페이지 구현
 // Route parameters - express
-app.get('/page/:pageId', function(request, response) {
+app.get('/page/:pageId', function(request, response, next) {
   // console.log(request.list)
   // key : value 방식
   const filteredId = path.parse(request.params.pageId).base; // security
   fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-    let title = request.params.pageId;
-    let sanitizedTitle = sanitizeHtml(title);
-    let sanitizedDescroption = sanitizeHtml(description);
-    let list = template.list(request.list);
-    let html = template.HTML(sanitizedTitle, list,
-      `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
-      `<a href="/create">create</a>
-      <a href="/update/${sanitizedTitle}">update</a>
-      <form action="/delete_process" method="post">
-        <input type="hidden" name="id" value="${sanitizedTitle}">
-        <input type="submit" value="delete">
-      </form>`
-      );
-      // /update?id= -> /update/ 변경
-      // delete_process 부분에 /delete_process 로 변경
-      response.send(html);
-    });
+    if(err){
+      next(err);
+    } else{
+      let title = request.params.pageId;
+      let sanitizedTitle = sanitizeHtml(title);
+      let sanitizedDescroption = sanitizeHtml(description);
+      let list = template.list(request.list);
+      let html = template.HTML(sanitizedTitle, list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
+        `<a href="/create">create</a>
+        <a href="/update/${sanitizedTitle}">update</a>
+        <form action="/delete_process" method="post">
+          <input type="hidden" name="id" value="${sanitizedTitle}">
+          <input type="submit" value="delete">
+        </form>`
+        );
+        // /update?id= -> /update/ 변경
+        // delete_process 부분에 /delete_process 로 변경
+        response.send(html);
+    }
+  });
 });
 
 // 페이지 생성
@@ -173,6 +177,15 @@ app.post('/delete_process', function(request,response){
       response.redirect(`/`);
   });
 });
+
+app.use(function(req, res, next) {
+  res.status(404).send('Sorry cant find that!');
+});
+
+app.use(function (err, req, res, next) {
+  console.error(err.stack)
+  res.status(500).send('Something broke!')
+})
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)

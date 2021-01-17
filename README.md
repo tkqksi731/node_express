@@ -51,3 +51,4 @@ pm2를 실행하면서 로그가 출력되도록 합니다. (--no-daemon) 또 �
    - app.use(compression())
 9. 정적인 파일의 서비스
    - app.use(express.static('public'));
+10. 존재하지 않는 페이지에 관하여 에러처리
