@@ -1,9 +1,8 @@
 const fs = require('fs');
-const template = require('./lib/template.js');
-const qs = require('querystring');
 const bodyParser = require('body-parser')
 const compression = require('compression')
 const topicRouter = require('./routes/topic.js')
+const indexRouter = require('./routes/index.js')
 const express = require('express')
 const app = express()
 const port = 3000
@@ -25,25 +24,10 @@ app.get('*', function(request, response, next){
     next();
   });
 });
+app.use('/', indexRouter)
+// index
 app.use('/topic', topicRouter)
 // topic 폴더에 기존 CUD 코드를 옮김 파일 분리
-
-
-// 예전 문법
-app.get('/', function(request, response) {  
-  // 화면의 홈 부분
-  let title = 'Welcome';
-  let description = 'Hello, Node.js';
-  let list = template.list(request.list);
-  let html = template.HTML(title, list,
-    `<h2>${title}</h2>${description}
-    <img src="/images/hello.jpg" style="width:300px; height:300px; display:block; margin-top:10px;"> `,
-    // 메인 페이지에 hello 이미지 넣기
-    `<a href="/topic/create">create</a>`
-    );
-    response.send(html);
-});
-
 
 
 app.use(function(req, res, next) {
