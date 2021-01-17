@@ -84,7 +84,7 @@ app.post('/topic/create_process', function(request, response){
       });
     });
   */
- 
+
   let post = request.body;
   let title = post.title;
   let description = post.description;
@@ -177,8 +177,6 @@ app.get('/topic/:pageId', function(request, response, next) {
   });
 });
 
-
-
 app.use(function(req, res, next) {
   res.status(404).send('Sorry cant find that!');
 });
@@ -191,7 +189,6 @@ app.use(function (err, req, res, next) {
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
-
 
 // const http = require('http');
 // const fs = require('fs');
@@ -225,6 +222,5 @@ app.listen(port, () => {
 //       response.writeHead(404);
 //       response.end('Not found');
 //     }
- 
 // });
 // app.listen(3000);
