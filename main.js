@@ -37,64 +37,34 @@ app.get('/', function(request, response) {
     `<h2>${title}</h2>${description}
     <img src="/images/hello.jpg" style="width:300px; height:300px; display:block; margin-top:10px;"> `,
     // 메인 페이지에 hello 이미지 넣기
-    `<a href="/create">create</a>`
+    `<a href="/topic/create">create</a>`
     );
     response.send(html);
 });
 
-// 상세 페이지 구현
-// Route parameters - express
-app.get('/page/:pageId', function(request, response, next) {
-  // console.log(request.list)
-  // key : value 방식
-  const filteredId = path.parse(request.params.pageId).base; // security
-  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-    if(err){
-      next(err);
-    } else{
-      let title = request.params.pageId;
-      let sanitizedTitle = sanitizeHtml(title);
-      let sanitizedDescroption = sanitizeHtml(description);
-      let list = template.list(request.list);
-      let html = template.HTML(sanitizedTitle, list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
-        `<a href="/create">create</a>
-        <a href="/update/${sanitizedTitle}">update</a>
-        <form action="/delete_process" method="post">
-          <input type="hidden" name="id" value="${sanitizedTitle}">
-          <input type="submit" value="delete">
-        </form>`
-        );
-        // /update?id= -> /update/ 변경
-        // delete_process 부분에 /delete_process 로 변경
-        response.send(html);
-    }
-  });
-});
-
 // 페이지 생성
-app.get('/create', function(request, response){
-    let title = 'WEB - create';
-    let list = template.list(request.list);
-    let html = template.HTML(title, list, `
-    <form action="/create_process" method="post">
-    <p>
-      <input type="text" name="title" placeholder="title">
-    </p>
-    <p>
-      <textarea name="description" placeholder="description"></textarea>
-    </p>
-    <p>
-      <input type="submit">
-    </p>
-  </form>
+app.get('/topic/create', function(request, response){
+  let title = 'WEB - create';
+  let list = template.list(request.list);
+  let html = template.HTML(title, list, `
+  <form action="/topic/create_process" method="post">
+  <p>
+    <input type="text" name="title" placeholder="title">
+  </p>
+  <p>
+    <textarea name="description" placeholder="description"></textarea>
+  </p>
+  <p>
+    <input type="submit">
+  </p>
+</form>
 `, '');
-  // create 부분 만들기(url, 요청)
-    response.send(html);
+// create 부분 만들기(url, 요청)
+  response.send(html);
 });
 
 // 페이지 생성 POST 방식
-app.post('/create_process', function(request, response){
+app.post('/topic/create_process', function(request, response){
   
   /*
   let body = '';
@@ -121,13 +91,12 @@ app.post('/create_process', function(request, response){
   console.log(request.list)
   // 제목과 내용 업로드
   fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-    response.writeHead(302, {Location: `/?id=${title}`});
-    response.end();
+    response.redirect(`/topic/${title}`);
   });
 });
 
 // 페이지 업데이트
-app.get('/update/:pageId', function(request, response){
+app.get('/topic/update/:pageId', function(request, response){
   const filteredId = path.parse(request.params.pageId).base; // security
   fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
     let title = request.params.pageId;
@@ -135,7 +104,7 @@ app.get('/update/:pageId', function(request, response){
     let html = template.HTML(title, list,
       //hidden으로 하여 id 값을 받고 변경된 title을 삽입
       `
-      <form action="/update_process" method="post">
+      <form action="/topic/update_process" method="post">
         <input type="hidden" name="id" value="${title}">
         <p>
           <input type="text" name="title" placeholder="title" value="${title}">
@@ -148,14 +117,14 @@ app.get('/update/:pageId', function(request, response){
         </p>
       </form>
       `,
-      `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+      `<a href="/topic/create">create</a> <a href="/topic/update/${title}">update</a>`
       );
       // 업데이트 시 선택한 제목과 내용에 대하여 불러와 title, description text 박스에 보이기
       response.send(html);
   });
 });
 
-app.post('/update_process', function(request, response){
+app.post('/topic/update_process', function(request, response){
     let post = request.body;
     let id = post.id;
     let title = post.title;
@@ -163,12 +132,12 @@ app.post('/update_process', function(request, response){
     fs.rename(`data/${id}`, `data/${title}`, function(error){
       // 제목과 내용 수정 업로드
       fs.writeFile(`data/${title}`, description, 'utf8', function(err) { // err가 있을 경우 처리 방식
-        response.redirect(`/page/${title}`);
+        response.redirect(`/topic/${title}`);
     })
   });
 });
 
-app.post('/delete_process', function(request,response){
+app.post('/topic/delete_process', function(request,response){
     let post = request.body;
     let id = post.id;
     const filteredId = path.parse(id).base; // security
@@ -177,6 +146,38 @@ app.post('/delete_process', function(request,response){
       response.redirect(`/`);
   });
 });
+
+// 상세 페이지 구현
+// Route parameters - express
+app.get('/topic/:pageId', function(request, response, next) {
+  // console.log(request.list)
+  // key : value 방식
+  const filteredId = path.parse(request.params.pageId).base; // security
+  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    if(err){
+      next(err);
+    } else{
+      let title = request.params.pageId;
+      let sanitizedTitle = sanitizeHtml(title);
+      let sanitizedDescroption = sanitizeHtml(description);
+      let list = template.list(request.list);
+      let html = template.HTML(sanitizedTitle, list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescroption}`,
+        `<a href="/topic/create">create</a>
+        <a href="/topic/update/${sanitizedTitle}">update</a>
+        <form action="/topic/delete_process" method="post">
+          <input type="hidden" name="id" value="${sanitizedTitle}">
+          <input type="submit" value="delete">
+        </form>`
+        );
+        // /update?id= -> /update/ 변경
+        // delete_process 부분에 /delete_process 로 변경
+        response.send(html);
+    }
+  });
+});
+
+
 
 app.use(function(req, res, next) {
   res.status(404).send('Sorry cant find that!');
