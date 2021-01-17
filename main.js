@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const compression = require('compression')
 const topicRouter = require('./routes/topic.js')
 const indexRouter = require('./routes/index.js')
+const helmet = require('helmet')
 const express = require('express')
 const app = express()
 const port = 3000
@@ -28,7 +29,7 @@ app.use('/', indexRouter)
 // index
 app.use('/topic', topicRouter)
 // topic 폴더에 기존 CUD 코드를 옮김 파일 분리
-
+app.use(helmet())
 
 app.use(function(req, res, next) {
   res.status(404).send('Sorry cant find that!');

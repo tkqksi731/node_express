@@ -55,3 +55,8 @@ pm2를 실행하면서 로그가 출력되도록 합니다. (--no-daemon) 또 �
 11. 라우터 - 주소 체계 변경
 12. 라우터 - 파일로 분리
 13. 라우터 - 파일로 분리 index
+
+---
+
+- Express에서 PUG 사용시 : http://expressjs.com/en/guide/using-template-engines.html "설치 및 사용 방법"
+- PUG링크 사이트 : https://pugjs.org/api/getting-started.html "코드 참조"
